@@ -1,0 +1,17 @@
+En caso de que las etiquetas haga referencia a VRF's
+....................................................
+
+CREACIÓN DE LA VRF
+---------------------
+Router(config)# ip vrf Customer_A
+Router(config-vrf)# rd 65000:1
+Router(config-vrf)# route-target export 65000:1
+Router(config-vrf)# route-target import 65000:1
+
+
+Asignar una interfaz a la VRF
+-----------------------------
+Router(config)# interface GigabitEthernet0/0
+Router(config-if)# ip vrf forwarding Customer_A
+Router(config-if)# ip address 192.168.10.1 255.255.255.0
+
