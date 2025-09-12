@@ -1,0 +1,54 @@
+!Ander's configuration
+interface g0/0
+nameif lan
+ip address 192.168.50.254 255.255.255.0
+no sh
+
+interface g0/1
+no sh
+
+interface g0/1.10
+vlan 10
+nameif herningco
+ip address 192.168.255.2 255.255.255.252
+no sh
+
+interface g0/1.100
+vlan 100
+nameif Cloud
+ip address 8.8.8.10 255.255.255.0
+no sh
+exit
+----------------------------------------------------
+!add to Ander's configuration
+interface g0/0
+nameif lan
+exit
+
+!The firewall must act as the internet gateway, so NAT (Network Address Translation) must be configured accordingly.
+!NAT
+object network lan-subnet
+subnet 192.168.50.0 255.255.255.0
+nat (lan,herningco) dynamic interface
+!ACL
+access-list IN-OUT extended permit ip host 192.168.50.100 any
+access-group IN-OUT in interface lan
+
+!It must secure the HerningCo network by allowing only internal IP addresses to access the Cloud SRV (refer to the task details for IP information related to HQ and Branch sites).
+!Q&A: The internal subnets are all local networks in HQ and BRANCH. Tunnel networks and P2P are not included.
+!static NAT
+object network lan-SSH
+host 192.168.50.100
+nat (lan,herningco) static interface service tcp 22 22
+!ACL
+access-list OUT-IN extended permit ip 172.16.10.0 255.255.255.0 host 192.168.50.100
+access-list OUT-IN extended permit ip 172.16.100.0 255.255.255.0 host 192.168.50.100
+access-group OUT-IN in interface herningco
+
+!The firewall must be properly configured to route all internal subnets within the HerningCo infrastructure.
+!Q&A: The internal subnets are all local networks in HQ and BRANCH. Tunnel networks and P2P are not included.
+!172.16.10.0/24 172.16.100.0/24 (PC1 & SRV1 networks)
+route herningco 172.16.10.0 255.255.255.0 192.168.255.1
+route herningco 172.16.100.0 255.255.255.0 192.168.255.1
+
+
